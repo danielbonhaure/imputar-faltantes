@@ -22,7 +22,7 @@
 *.Rproj
 .Rproj.user/
 
-# produced vignettes
+# Produced vignettes
 vignettes/*.html
 vignettes/*.pdf
 
@@ -40,12 +40,16 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
+# Pkgdown site
 docs/
 
-# translation temp files
+# Translation temp files
 po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Files
+*.csv
+*.rds
 
