@@ -142,6 +142,8 @@ registrosDiarios <- purrr::map_dfr(
     url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{omm_id}/{fecha.desde}/{fecha.hasta}")
     registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
                                                   usuario = usuario.default, clave = clave.default)
+    if ( "estado" %in% names(registros.largo) )
+      registros.largo     <- dplyr::select(registros.largo, -estado)
     registros.ancho       <- tidyr::spread(registros.largo, key = variable_id, value = valor)
     return (registros.ancho)
   }
@@ -202,11 +204,14 @@ registrosImputados <- purrr::map_dfr(
         registrosVecinos <- purrr::map_dfr(
           .x = vecinos.data$omm_id,
           .f = function(omm_id) {
+            writeLines(paste0(">> Station: ", omm_id, '. Downloading neighboring stations data.'))
             fecha.desde           <- ConvertirFechaISO8601(as.Date("1947-01-01", tz = UTC))
             fecha.hasta           <- ConvertirFechaISO8601(as.Date(Sys.Date(), tz = UTC))
             url.registros.diarios <- glue::glue("{base.url}/registros_diarios/{omm_id}/{fecha.desde}/{fecha.hasta}")
             registros.largo       <- ConsumirServicioJSON(url = url.registros.diarios,
                                                           usuario = usuario.default, clave = clave.default)
+            if ( "estado" %in% names(registros.largo) )
+              registros.largo     <- dplyr::select(registros.largo, -estado)
             registros.ancho       <- tidyr::spread(registros.largo, key = variable_id, value = valor)
             return (registros.ancho)
           }
@@ -254,7 +259,17 @@ registrosImputados <- purrr::map_dfr(
   }
 )
 
-# Guardar resultados en un archivo RDS
-saveRDS(registrosImputados, paste0(opt$output, ".rds"))
+# Unir datos imputados y datos de la estación descargados desde la API
+registrosCompletos <- registrosDiarios %>% dplyr::select(-tmax, -tmin, -prcp) %>%
+  dplyr::right_join(registrosImputados, by = c("omm_id", "fecha"))
+
+# Guardar resultados en un archivo RDS y en un archivo CSV
+base_file_name <-
+  tools::file_path_sans_ext(opt$output)
+saveRDS(
+  registrosCompletos, file=paste0(base_file_name, ".rds"))
+write.csv(
+  registrosCompletos, file=paste0(base_file_name, ".csv"), row.names=FALSE)
 
 # ------------------------------------------------------------------------------
+
