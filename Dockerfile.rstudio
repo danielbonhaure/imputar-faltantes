@@ -1,0 +1,83 @@
+
+##################################################################
+##                           README                             ##
+##################################################################
+## Este Dockerfile permite crear un contendor con RStudio (co-  ##
+## rriendo en modo WEB), con todos los paquetes necesarios para ##
+## levantar un ambiente de desarrollo.                          ##
+##################################################################
+
+
+
+#################################
+## Stage 1: Install R packages ##
+#################################
+
+
+# Create image
+FROM rocker/rstudio
+
+# Install OS packages
+RUN apt-get -y -qq update && \
+    apt-get -y -qq --no-install-recommends install \
+        # to install httr (R)
+        # to install s2, a gstat dependency (R)
+        libssl-dev \
+        # to install units, a gstat dependency (R)
+        libudunits2-dev \
+        # to install sf, a gstat dependency (R)
+        gdal-bin libgdal-dev \
+        # Management packages
+        git htop vim iputils-ping iproute2
+
+# Set CRAN mirror
+ARG CRAN_MIRROR="getOption('repos')"
+
+# Install R packages
+RUN R -e "options(warn=2); install.packages('doMC', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('dplyr', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('glue', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('gstat', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('here', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('httr', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('jsonlite', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('missForest', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('optparse', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('purrr', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('randomForest', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('robustbase', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('sirad', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('sp', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('tibble', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('tidyr', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('xts', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('zoo', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('lazyeval', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('rgeos', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('geosphere', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+RUN R -e "options(warn=2); install.packages('rgdal', repos=${CRAN_MIRROR}, verbose=T, quiet=T, keep_outputs='/tmp/')"
+
+
+
+#####################################################
+## Usage: Commands to Build and Run this Container ##
+#####################################################
+
+
+# Build container
+#
+# docker build \
+#  --file Dockerfile.rstudio \
+#  --tag imputador-rstudio:latest .
+
+# Run container
+#
+# docker run -ti --rm \
+#  --name imputador-rstudio \
+#  --env DISABLE_AUTH=true \
+#  --volume $(pwd):/home/rstudio/imputador \
+#  --workdir /home/rstudio/imputador \
+#  --publish 127.0.0.1:8787:8787 \
+#  --detach imputador-rstudio:latest
+
+# In a Web Browser, go to http://localhost:8787/
